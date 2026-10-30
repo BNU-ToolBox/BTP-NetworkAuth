@@ -6,6 +6,17 @@
   "repository": "https://github.com/BNU-ToolBox/BTP-NetworkAuth",
   "versions": [
     {
+      "version": "1.2.2",
+      "release_tag": "v1.2.2",
+      "host_version": {
+        "min": "0.1.0",
+        "max": null
+      },
+      "release_url": "https://github.com/BNU-ToolBox/BTP-NetworkAuth/releases/tag/v1.2.2",
+      "download_url": "https://github.com/BNU-ToolBox/BTP-NetworkAuth/releases/download/v1.2.2/BTP-NetworkAuth-1.2.2.zip",
+      "sha256": "92db0c3da5f36afac81a0ecf183ae9c7a7de1e79b272616458ea75a7899b3501"
+    },
+    {
       "version": "1.2.1",
       "release_tag": "v1.2.1",
       "host_version": {

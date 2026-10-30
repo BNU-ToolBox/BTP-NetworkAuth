@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import subprocess
 import sys
 from logging.handlers import RotatingFileHandler
@@ -13,16 +14,10 @@ sys.dont_write_bytecode = True
 
 PLUGIN_ID = "campus-network-auth"
 THIS_DIR = Path(__file__).resolve().parent
-ROOT = THIS_DIR.parents[1]
 REGISTRY_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 REGISTRY_VALUE = "BNU-ToolBox-CampusNetworkAuth"
-
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-if str(THIS_DIR) not in sys.path:
-    sys.path.insert(0, str(THIS_DIR))
-
-from app.core.paths import PLUGIN_DATA_DIR  # noqa: E402
+HOST_ROOT: Path | None = None
+PLUGIN_DATA_PATH: Path | None = None
 
 
 def _require_windows_11() -> None:
@@ -41,7 +36,33 @@ def _python_command() -> str:
 
 
 def _launch_command() -> list[str]:
-    return [_python_command(), str(THIS_DIR / "autostart.py"), "--run"]
+    if HOST_ROOT is None or PLUGIN_DATA_PATH is None:
+        raise RuntimeError("缺少主程序目录或插件数据目录")
+    return [
+        _python_command(),
+        str(THIS_DIR / "autostart.py"),
+        "--run",
+        "--home",
+        str(HOST_ROOT),
+        "--data-dir",
+        str(PLUGIN_DATA_PATH),
+    ]
+
+
+def _configure_paths(home: str = "", data_dir: str = "") -> None:
+    global HOST_ROOT, PLUGIN_DATA_PATH
+    home_value = home or os.environ.get("BNU_TOOLBOX_HOME", "")
+    if home_value:
+        HOST_ROOT = Path(home_value).expanduser().resolve()
+        if str(HOST_ROOT) not in sys.path:
+            sys.path.insert(0, str(HOST_ROOT))
+    data_value = data_dir or os.environ.get("BNU_TOOLBOX_PLUGIN_DATA_DIR", "")
+    if data_value:
+        PLUGIN_DATA_PATH = Path(data_value).expanduser().resolve()
+    elif PLUGIN_DATA_PATH is None:
+        local = os.environ.get("LOCALAPPDATA")
+        if local:
+            PLUGIN_DATA_PATH = Path(local) / "BNU-ToolBox" / "plugins" / PLUGIN_ID
 
 
 def install() -> dict:
@@ -129,13 +150,17 @@ class _InstanceLock:
 
 
 def _load_config() -> dict:
+    if HOST_ROOT is None:
+        raise RuntimeError("缺少 BNU-ToolBox 主程序目录")
     from app.core.config_store import PluginConfigStore
     return PluginConfigStore(PLUGIN_ID).get()
 
 
 def run_autostart() -> int:
     _require_windows_11()
-    data_dir = PLUGIN_DATA_DIR / PLUGIN_ID
+    if PLUGIN_DATA_PATH is None:
+        raise RuntimeError("缺少校园网认证插件数据目录")
+    data_dir = PLUGIN_DATA_PATH
     data_dir.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger("bnu-toolbox-campus-network-autostart")
     logger.setLevel(logging.INFO)
@@ -174,7 +199,10 @@ def main() -> int:
     parser.add_argument("--uninstall", action="store_true")
     parser.add_argument("--status", action="store_true")
     parser.add_argument("--run", action="store_true")
+    parser.add_argument("--home", default="")
+    parser.add_argument("--data-dir", default="")
     args = parser.parse_args()
+    _configure_paths(args.home, args.data_dir)
     try:
         if args.install:
             print(json.dumps(install(), ensure_ascii=False))
