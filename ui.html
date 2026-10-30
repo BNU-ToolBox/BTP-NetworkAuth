@@ -1,18 +1,9 @@
 <div class="bnu-config" id="campus-auth-ui">
-  <div class="bnu-alert">
-    校园网认证使用“账号管理”中所选账号的学号与校园网密码。账号凭据由宿主统一加密保存。
-  </div>
-
   <div class="bnu-row">
     <button class="bnu-btn bnu-primary" id="campus-save">保存配置</button>
     <button class="bnu-btn bnu-primary" id="campus-autostart-switch"
       aria-pressed="false">设置开机自启</button>
     <span class="bnu-hint" id="campus-autostart-state">正在读取开机自启状态…</span>
-  </div>
-
-  <div class="bnu-alert">
-    认证入口固定为 <strong>172.16.202.202</strong>，终端类型固定为电脑，
-    AC ID 固定为 39，绑定 IP 自动留空。
   </div>
 
   <div class="bnu-row">
@@ -28,11 +19,6 @@
       <label for="campus-timeout">请求超时（秒）</label>
       <input type="number" id="campus-timeout" min="2" max="60" step="1">
     </div>
-  </div>
-
-  <div class="bnu-hint">
-    开机自启直接运行插件自带的独立脚本，不需要 BNU-ToolBox 同时启动。切换账号后，
-    自启脚本会在每次运行时读取该插件当前选择的账号。
   </div>
 
   <div class="bnu-alert" id="campus-msg" hidden></div>
