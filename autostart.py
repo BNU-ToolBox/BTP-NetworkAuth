@@ -152,8 +152,20 @@ class _InstanceLock:
 def _load_config() -> dict:
     if HOST_ROOT is None:
         raise RuntimeError("缺少 BNU-ToolBox 主程序目录")
-    from app.core.config_store import PluginConfigStore
-    return PluginConfigStore(PLUGIN_ID).get()
+    from app.core.config_store import (
+        AccountSelectionStore,
+        GlobalConfig,
+        PluginConfigStore,
+    )
+
+    config = PluginConfigStore(PLUGIN_ID).get()
+    account_id = AccountSelectionStore().get(PLUGIN_ID)
+    account = GlobalConfig().resolve_account(account_id)
+    config.update({
+        "username": str(account.get("username") or ""),
+        "password": str(account.get("campus_password") or ""),
+    })
+    return config
 
 
 def run_autostart() -> int:
